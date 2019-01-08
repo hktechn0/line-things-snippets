@@ -34,8 +34,6 @@ BLECharacteristic* psdiCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
-volatile int btnAction = 0;
-
 DHTesp dht;
 TempAndHumidity currentValue;
 
