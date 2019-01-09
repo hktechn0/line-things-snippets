@@ -97,6 +97,8 @@ void loop() {
     } else {
       Serial.println("update failed");
     }
+
+    refreshSensorValue = false;
   }
 
   // Disconnection
