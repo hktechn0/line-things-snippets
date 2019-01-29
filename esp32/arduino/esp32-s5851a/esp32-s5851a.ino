@@ -8,8 +8,13 @@
 #include <Wire.h>
 #include <Ticker.h>
 
+/**
+ * BLE Temperature Sensor using S-5851A
+ * https://github.com/jakalada/Arduino-S5851A
+ */
+
 // Device Name: Maximum 30 bytes
-#define DEVICE_NAME "S-5851A Sernsor - ESP32"
+#define DEVICE_NAME "Temeperature S-5851A - ESP32"
 
 // User service UUID: Change this to your generated service UUID
 // #define USER_SERVICE_UUID "ed15d3e6-d9c8-4029-9ec8-5946ed4ff9e7"

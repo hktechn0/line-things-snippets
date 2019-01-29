@@ -2,6 +2,11 @@
 #include <Wire.h>
 #include <SparkFun_MMA8452Q.h>
 
+/**
+ * BLE Accelerometer using MMA8452
+ * https://github.com/sparkfun/MMA8452_Accelerometer
+ */
+
 // Device Name: Maximum 30 bytes
 #define DEVICE_NAME "Accel MMA8452 - nRF52"
 

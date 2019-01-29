@@ -3,13 +3,18 @@
 #include <Wire.h>
 #include <MMA8653.h>
 
+/**
+ * BLE Accelerometer using MMA8653 on BBC micro:bit
+ * https://learn.adafruit.com/use-micro-bit-with-arduino/accelerometer-and-magnetometer
+ */
+
 // Device Name: Maximum 20 bytes
 #define DEVICE_NAME "micro:bit"
 // Local Name in advertising packet: Maximum 29 bytes
 #define LOCAL_NAME "Accelerometer - micro:bit"
 
 // User Service UUID: Change this to your generated service UUID
-#define USER_SERVICE_UUID "c3a407c5-f9a9-46f6-a7b3-f19181049759"
+// #define USER_SERVICE_UUID "c3a407c5-f9a9-46f6-a7b3-f19181049759"
 
 // Accelerometer Service UUID
 #define ACCELEROMETER_SERVICE_UUID "cb1d1e22-3597-4551-a5e8-9b0d6e768568"

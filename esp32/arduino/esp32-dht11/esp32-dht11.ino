@@ -2,9 +2,13 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <DHTesp.h>
+#include <Ticker.h>
 
-#include "DHTesp.h"
-#include "Ticker.h"
+/**
+ * BLE Temperature Sensor using DHT11
+ * https://github.com/beegee-tokyo/DHTesp
+ */
 
 // Device Name: Maximum 30 bytes
 #define DEVICE_NAME "DHT11 Sernsor - ESP32"

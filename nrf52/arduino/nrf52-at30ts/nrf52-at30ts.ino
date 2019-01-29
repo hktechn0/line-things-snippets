@@ -1,8 +1,13 @@
 #include <bluefruit.h>
 #include <Wire.h>
 
+/**
+ * BLE Temperature Sensor using AT30TS74
+ * https://www.microchip.com/wwwproducts/en/AT30TS74
+ */
+
 // Device Name: Maximum 30 bytes
-#define DEVICE_NAME "AT30TS Sernsor - nRF52"
+#define DEVICE_NAME "Temperature AT30TS - nRF52"
 
 // User service UUID: Change this to your generated service UUID
 // #define USER_SERVICE_UUID "ed15d3e6-d9c8-4029-9ec8-5946ed4ff9e7"

@@ -2,6 +2,12 @@
 #include <Wire.h>
 #include <FaBoMotor_DRV8830.h>
 
+/**
+ * 4WD BLE R/C Car using TI DRV8830 I2C motor driver
+ * http://www.ti.com/product/DRV8830
+ * https://github.com/FaBoPlatform/FaBoMotor-DRV8830-Library (with minor fix)
+ */
+
 // Device Name: Maximum 30 bytes
 #define DEVICE_NAME "4WD R/C Car DRV8830 - nRF52"
 
