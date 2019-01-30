@@ -91,7 +91,7 @@ void motorWriteCallback(BLECharacteristic& chr, uint8_t* data, uint16_t len, uin
     speedR = speed * ((double) (INT8_MAX - direction) / (double) INT8_MAX);
   } else {
     // Left turn
-    speedL = speed * ((double) (INT8_MAX - (-direction)) / (double) INT8_MAX);    
+    speedL = speed * ((double) (INT8_MIN - direction) / (double) INT8_MIN);
     speedR = speed;
   }
 
@@ -121,8 +121,8 @@ void motorWriteCallback(BLECharacteristic& chr, uint8_t* data, uint16_t len, uin
     motor3.drive(DRV8830_FORWARD, vsetL > DRV8830_SPEED_MIN ? vsetL : DRV8830_SPEED_MIN);
     motor4.drive(DRV8830_FORWARD, vsetL > DRV8830_SPEED_MIN ? vsetL : DRV8830_SPEED_MIN);
   } else if (speed < 0) {
-    uint8_t vsetR = (-(speedR - 1) >> 1) & 0x3f;
-    uint8_t vsetL = (-(speedL - 1) >> 1) & 0x3f;
+    uint8_t vsetR = (-(speedR + 1) >> 1) & 0x3f;
+    uint8_t vsetL = (-(speedL + 1) >> 1) & 0x3f;
 
     motor1.drive(DRV8830_REVERSE, vsetR > DRV8830_SPEED_MIN ? vsetR : DRV8830_SPEED_MIN);
     motor2.drive(DRV8830_REVERSE, vsetR > DRV8830_SPEED_MIN ? vsetR : DRV8830_SPEED_MIN);
