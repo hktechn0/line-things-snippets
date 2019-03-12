@@ -1,4 +1,5 @@
 const ENVIRONMENTAL_SENSING_SERVICE_UUID = "0000181A-0000-1000-8000-00805F9B34FB";
+const PRESSURE_CHARACTERISTIC_UUID = "00002A6D-0000-1000-8000-00805F9B34FB";
 const TEMPERATURE_CHARACTERISTIC_UUID = "00002A6E-0000-1000-8000-00805F9B34FB";
 const HUMIDTY_CHARACTERISTIC_UUID = "00002A6F-0000-1000-8000-00805F9B34FB";
 
@@ -194,11 +195,16 @@ function updateConnectionStatus(device, status) {
 }
 
 async function refreshValues(device) {
+    const pressureCharacteristic = await getCharacteristic(
+        device, ENVIRONMENTAL_SENSING_SERVICE_UUID, PRESSURE_CHARACTERISTIC_UUID);
     const temperatureCharacteristic = await getCharacteristic(
         device, ENVIRONMENTAL_SENSING_SERVICE_UUID, TEMPERATURE_CHARACTERISTIC_UUID);
     const humidityCharacteristic = await getCharacteristic(
         device, ENVIRONMENTAL_SENSING_SERVICE_UUID, HUMIDTY_CHARACTERISTIC_UUID);
 
+    const pressureBuffer = await readCharacteristic(pressureCharacteristic).catch(e => {
+        return null;
+    });
     const temperatureBuffer = await readCharacteristic(temperatureCharacteristic).catch(e => {
         return null;
     });
@@ -206,6 +212,10 @@ async function refreshValues(device) {
         return null;
     });
 
+    if (pressureBuffer !== null) {
+        const pressureValue = pressureBuffer.getUint32(0, true) / 10.0 / 100.0;
+        getDevicePressureField(device).innerText = `${pressureValue} hPa`;
+    }
     if (temperatureBuffer !== null) {
         const temperatureValue = temperatureBuffer.getInt16(0, true) / 100.0;
         getDeviceTemperatureField(device).innerText = `${temperatureValue} ℃`;
@@ -273,6 +283,10 @@ function getDeviceTemperatureField(device) {
 
 function getDeviceHumidityField(device) {
     return getDeviceCard(device).getElementsByClassName('humidity-value')[0];
+}
+
+function getDevicePressureField(device) {
+    return getDeviceCard(device).getElementsByClassName('pressure-value')[0];
 }
 
 function renderVersionField() {
