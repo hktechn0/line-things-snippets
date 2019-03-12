@@ -6,6 +6,7 @@
 /**
  * BLE Temperature & Pressure Sensor using BMP280
  * https://www.bosch-sensortec.com/bst/products/all_products/bmp280
+ * https://github.com/adafruit/Adafruit_BMP280_Library
  */
 
 // Device Name: Maximum 30 bytes
