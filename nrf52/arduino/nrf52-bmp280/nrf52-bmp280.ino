@@ -75,9 +75,11 @@ void loop() {
     // Set sensor values to characteristics
     if (currentPressure != pressureValue) {
       pressureCharacteristic.notify32(pressureValue);
+      currentPressure = pressureValue;
     }
     if (currentTemperature != temperatureValue) {
       temperatureCharacteristic.notify16((uint16_t) temperatureValue);
+      currentTemperature = temperatureValue;
     }
 
     refreshSensorValue = false;
