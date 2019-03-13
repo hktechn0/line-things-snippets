@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
-#include <DHT_U.h>
 
 /**
  * BLE Temperature & Humidity Sensor using DHT11
@@ -10,7 +9,7 @@
  */
 
 // Device Name: Maximum 30 bytes
-#define DEVICE_NAME "Pressure BMP280 - nRF52"
+#define DEVICE_NAME "DHT11 Sensor - nRF52"
 
 // User service UUID: Change this to your generated service UUID
 // #define USER_SERVICE_UUID "ed15d3e6-d9c8-4029-9ec8-5946ed4ff9e7"
@@ -39,7 +38,7 @@ BLECharacteristic humidityCharacteristic;
 BLEService psdiService;
 BLECharacteristic psdiCharacteristic;
 
-DHT_Unified dht(DHTPIN, DHTTYPE);
+DHT dht(DHTPIN, DHTTYPE);
 
 SoftwareTimer timer;
 volatile bool refreshSensorValue = false;
@@ -50,30 +49,7 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
 
-  // Initialize device.
   dht.begin();
-  // Print temperature sensor details.
-  sensor_t sensor;
-  dht.temperature().getSensor(&sensor);
-  Serial.println(F("------------------------------------"));
-  Serial.println(F("Temperature Sensor"));
-  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
-  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
-  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
-  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
-  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
-  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
-  Serial.println(F("------------------------------------"));
-  // Print humidity sensor details.
-  dht.humidity().getSensor(&sensor);
-  Serial.println(F("Humidity Sensor"));
-  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
-  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
-  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
-  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
-  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
-  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
-  Serial.println(F("------------------------------------"));
 
   Bluefruit.begin();
   Bluefruit.setName(DEVICE_NAME);
@@ -92,36 +68,31 @@ void triggerRefreshSensorValue(TimerHandle_t xTimer) {
 
 void loop() {
   if (refreshSensorValue) {
-    sensors_event_t event;
-    dht.temperature().getEvent(&event);
-    if (isnan(event.temperature)) {
-      Serial.println(F("Error reading temperature!"));
-    }
-    else {
-      Serial.print(F("Temperature: "));
-      Serial.print(event.temperature);
-      Serial.println(F("°C"));
+    float humidity = dht.readHumidity();
+    float temperature = dht.readTemperature();
 
-      if (currentTemperature != event.temperature) {
-        temperatureCharacteristic.notify16((uint16_t) (event.temperature * 100));
-      }
+    if (isnan(humidity) || isnan(temperature)) {
+      Serial.println(F("Failed to read from DHT sensor!"));
+      return;
     }
 
-    dht.humidity().getEvent(&event);
-    if (isnan(event.relative_humidity)) {
-      Serial.println(F("Error reading humidity!"));
+    if (currentHumidity != humidity) {
+      humidityCharacteristic.notify16(humidity * 100);
+      currentHumidity = humidity * 100;
     }
-    else {
-      Serial.print(F("Humidity: "));
-      Serial.print(event.relative_humidity);
-      Serial.println(F("%"));
-
-      if (currentHumidity != event.relative_humidity) {
-        humidityCharacteristic.notify16(event.relative_humidity * 100);
-      }
+    if (currentTemperature != temperature) {
+      temperatureCharacteristic.notify16((uint16_t) (temperature * 100));
+      currentTemperature = temperature * 100;
     }
 
     refreshSensorValue = false;
+
+    Serial.print(F("Temperature: "));
+    Serial.print(temperature);
+    Serial.println(F("°C"));
+    Serial.print(F("Humidity: "));
+    Serial.print(humidity);
+    Serial.println(F("%"));
   }
 }
 
