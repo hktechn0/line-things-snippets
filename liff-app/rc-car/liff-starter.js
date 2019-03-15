@@ -154,28 +154,28 @@ function initializeCardForDevice(device) {
         return () => {
             if ((lastTime + interval) <= new Date().getTime()) {
                 lastTime = new Date().getTime();
-                updateCarState(device, 0).catch(e => `ERROR on updateCarState(): ${e}\n${e.stack}`);
+                updateCarState(device, 0).catch(e => onScreenLog(`ERROR on updateCarState(): ${e}\n${e.stack}`));
             }
         };
     })();
 
     template.querySelector('.range-direction').addEventListener('change', () => {
-        updateCarState(device, 0).catch(e => `ERROR on updateCarState(): ${e}\n${e.stack}`);
+        updateCarState(device, 0).catch(e => onScreenLog(`ERROR on updateCarState(): ${e}\n${e.stack}`));
     });
     template.querySelector('.range-speed').addEventListener('change', () => {
-        updateCarState(device, 0).catch(e => `ERROR on updateCarState(): ${e}\n${e.stack}`);
+        updateCarState(device, 0).catch(e => onScreenLog(`ERROR on updateCarState(): ${e}\n${e.stack}`));
     });
     template.querySelector('.range-direction').addEventListener('input', throttledUpdateCarState);
     template.querySelector('.range-speed').addEventListener('input', throttledUpdateCarState);
     template.querySelector('.button-standby').addEventListener('click', () => {
         getDeviceDirectionInput(device).value = 0;
         getDeviceSpeedInput(device).value = 0;
-        updateCarState(device, 0).catch(e => `ERROR on updateCarState(): ${e}\n${e.stack}`);
+        updateCarState(device, 0).catch(e => onScreenLog(`ERROR on updateCarState(): ${e}\n${e.stack}`));
     });
     template.querySelector('.button-brake').addEventListener('mousedown', () => {
         getDeviceDirectionInput(device).value = 0;
         getDeviceSpeedInput(device).value = 0;
-        updateCarState(device, 1).catch(e => `ERROR on updateCarState(): ${e}\n${e.stack}`);
+        updateCarState(device, 1).catch(e => onScreenLog(`ERROR on updateCarState(): ${e}\n${e.stack}`));
     });
 
     // Remove existing same id card

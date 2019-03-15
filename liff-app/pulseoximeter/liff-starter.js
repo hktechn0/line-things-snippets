@@ -198,15 +198,15 @@ async function toggleNotification(device, state) {
         return;
     }
 
-    const accelerometerCharacteristic = await getCharacteristic(
+    const characteristic = await getCharacteristic(
         device, PULSE_OXIMETER_SERVICE_UUID, PLX_CONTINUOUS_MEASUREMENT_UUID);
 
     if (!state) {
         // Stop notification
-        await stopNotification(accelerometerCharacteristic, notificationCallback);
+        await stopNotification(characteristic, notificationCallback);
     } else {
         // Start notification
-        await enableNotification(accelerometerCharacteristic, notificationCallback);
+        await enableNotification(characteristic, notificationCallback);
     }
 }
 
@@ -225,9 +225,9 @@ async function stopNotification(characteristic, callback) {
 }
 
 function notificationCallback(e) {
-    const accelerometerBuffer = new DataView(e.target.value.buffer);
+    const buffer = new DataView(e.target.value.buffer);
     onScreenLog(`Notify ${e.target.uuid}: ${buf2hex(e.target.value.buffer)}`);
-    updateValues(e.target.service.device, accelerometerBuffer);
+    updateValues(e.target.service.device, buffer);
 }
 
 function updateValues(device, buffer) {
@@ -247,7 +247,7 @@ function readSFLOAT(dataInt16) {
     }
   
     return mantissa * Math.pow(10, exponential);
-  }
+}
 
 async function readCharacteristic(characteristic) {
     const response = await characteristic.readValue().catch(e => {

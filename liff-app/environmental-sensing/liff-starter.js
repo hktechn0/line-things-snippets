@@ -147,7 +147,7 @@ function initializeCardForDevice(device) {
     });
 
     template.querySelector('.refresh-value').addEventListener('click', () => {
-        refreshValues(device).catch(e => `ERROR on refreshValues(): ${e}\n${e.stack}`);
+        refreshValues(device).catch(e => onScreenLog(`ERROR on refreshValues(): ${e}\n${e.stack}`));
     });
 
     // Remove existing same id card
