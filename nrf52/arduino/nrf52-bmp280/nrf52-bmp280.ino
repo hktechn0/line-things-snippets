@@ -47,7 +47,7 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
 
-  if (!bme.begin(0x76)) {  
+  if (!bme.begin(BMP280_ADDR)) {  
     Serial.println("Could not find a valid BMP280 sensor, check wiring!");
     while (1);
   }
