@@ -32,3 +32,4 @@
 *.app
 
 cachebuster.sh
+.vscode
