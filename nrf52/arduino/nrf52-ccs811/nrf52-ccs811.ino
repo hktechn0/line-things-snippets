@@ -84,6 +84,7 @@ void setup() {
   hdc1080.begin(0x40);
 
   Bluefruit.begin();
+  Bluefruit.setTxPower(4);
   Bluefruit.setName(DEVICE_NAME);
 
   delay(5000);
