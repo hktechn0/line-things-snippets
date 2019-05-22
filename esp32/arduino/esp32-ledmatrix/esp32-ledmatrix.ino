@@ -11,6 +11,8 @@
 
 // HD_0158_RG0019 library doesn't use manual RAM control.
 // Set SE and ABB low.
+
+/*
 #define PANEL_PIN_A3  16
 #define PANEL_PIN_A2  17
 #define PANEL_PIN_A1  18
@@ -20,12 +22,24 @@
 #define PANEL_PIN_WE  27
 #define PANEL_PIN_DR  26
 #define PANEL_PIN_ALE 25
+*/
+
+#define PANEL_PIN_ABB 33
+#define PANEL_PIN_A3  26
+#define PANEL_PIN_A2  27
+#define PANEL_PIN_A1  14
+#define PANEL_PIN_A0  13
+#define PANEL_PIN_DG  4
+#define PANEL_PIN_CLK 16
+#define PANEL_PIN_WE  17
+#define PANEL_PIN_DR  5
+#define PANEL_PIN_ALE 18
 
 // Device Name: Maximum 30 bytes
 #define DEVICE_NAME "LED Matrix - ESP32"
 
 // User service UUID: Change this to your generated service UUID
-// #define USER_SERVICE_UUID "2ab1cc76-5ca4-4bca-85fe-8262102de7f3"
+#define USER_SERVICE_UUID "2ab1cc76-5ca4-4bca-85fe-8262102de7f3"
 
 // Display service and characteristics
 #define DISPLAY_SERVICE_UUID "777AD5D4-7355-4682-BF3E-72FE7C70B3CE"
@@ -105,6 +119,9 @@ void setup() {
   Serial.println("Ready to Connect");
 
   delay(100);
+
+  pinMode(PANEL_PIN_ABB, OUTPUT);
+  digitalWrite(PANEL_PIN_ABB, LOW);
 
   matrix.begin();
   matrix.setTextWrap(false);
