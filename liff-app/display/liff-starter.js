@@ -1,5 +1,6 @@
 const DISPLAY_SERVICE_UUID = "777AD5D4-7355-4682-BF3E-72FE7C70B3CE";
 const TEXT_WRITE_CHARACTERISTIC_UUID = "F13DB656-27CF-4E0D-9FC6-61FF3BAEA821";
+const TEXT_COLOR_WRITE_CHARACTERISTIC_UUID = "3D008758-2D0A-4A57-A3A0-F66610AA3465";
 
 const deviceUUIDSet = new Set();
 const connectedUUIDSet = new Set();
@@ -148,6 +149,13 @@ function initializeCardForDevice(device) {
         updateText(device).catch(e => onScreenLog(`ERROR on updateText(): ${e}\n${e.stack}`));
     });
 
+    template.querySelector('.button-add-text').addEventListener('click', () => {
+        const textElements = template.querySelector('.input-text-row > .col');
+        const textElement = textElements.children[textElements.children.length - 1].cloneNode(true);
+        textElement.querySelector('.input-display-text').value = "";
+        textElements.appendChild(textElement);
+    });
+
     // Remove existing same id card
     const oldCardElement = getDeviceCard(device);
     if (oldCardElement && oldCardElement.parentNode) {
@@ -193,15 +201,33 @@ function updateConnectionStatus(device, status) {
 }
 
 async function updateText(device) {
-    const inputText = getDeviceInputText(device).value;
+    const textForms = getDeviceInputText(device);
+    const colorForms = getDeviceInputColor(device);
 
-    onScreenLog(`${inputText}`);
-    const payload = inputText.split("").concat(["\0"]).map(c => c.charCodeAt());
-    onScreenLog(`${payload}`);
+    let textPayload = []
+    let colorPayload = []
+    for (let i = 0; i < textForms.length; i++) {
+        const textInput = textForms[i].value;
+        const colorInput = colorForms[i].value;
 
-    const characteristic = await getCharacteristic(
+        onScreenLog(`${textInput} ${colorInput}`);
+        textPayload = textPayload.concat(textInput.split("").map(c => c.charCodeAt()));
+        colorPayload = colorPayload.concat(colorInput.repeat(textInput.length).split("").map(c => c.charCodeAt()));
+    }
+    textPayload = textPayload.concat(["\0"]);
+    colorPayload = colorPayload.concat(["\0"]);
+    onScreenLog(`${textPayload}`);
+    onScreenLog(`${colorPayload}`);
+
+    const textCharacteristic = await getCharacteristic(
         device, DISPLAY_SERVICE_UUID, TEXT_WRITE_CHARACTERISTIC_UUID);
-    await writeCharacteristic(characteristic, payload);
+    const colorCharacteristic = await getCharacteristic(
+        device, DISPLAY_SERVICE_UUID, TEXT_COLOR_WRITE_CHARACTERISTIC_UUID);
+
+    for (let i = 0; i < textPayload.length; i += 20) {
+        await writeCharacteristic(textCharacteristic, textPayload.slice(i, i + 20));
+        await writeCharacteristic(colorCharacteristic, colorPayload.slice(i, i + 20));
+    }
 }
 
 async function readCharacteristic(characteristic) {
@@ -256,7 +282,11 @@ function getDeviceDisconnectButton(device) {
 }
 
 function getDeviceInputText(device) {
-    return getDeviceCard(device).getElementsByClassName('input-display-text')[0];
+    return getDeviceCard(device).getElementsByClassName('input-display-text');
+}
+
+function getDeviceInputColor(device) {
+    return getDeviceCard(device).getElementsByClassName('input-display-color');
 }
 
 function renderVersionField() {

@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
-  <link rel="stylesheet" href="style.css?id=20190302_1551511101">
+  <link rel="stylesheet" href="style.css?id=20190529_1559123314">
   <title>Display Service</title>
 </head>
 
@@ -48,15 +48,37 @@
           </div>
         </div>
         <div class="card-body container" style="display:none;">
+          <div class="row justify-content-center align-items-center input-text-row">
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control input-display-text" placeholder="Enter text">
+                <div class="input-group-append">
+                  <select class="custom-select input-display-color">
+                    <option value="G">Green</option>
+                    <option value="R">Red</option>
+                    <option value="O">Orange</option>
+                    <option value="X">Green flash</option>
+                    <option value="Y">Red flash</option>
+                    <option value="Z">Orange flash</option>
+                    <option value="U">Green-Red</option>
+                    <option value="V">Green-Orange</option>
+                    <option value="W">Red-Orange</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <div class="row justify-content-center align-items-center">
+          <div class="row justify-content-center align-items-center m-3">
             <div class="col text-center">
-              <input type="text" class="form-control input-display-text" aria-describedby="textHelp" placeholder="Enter text">
               <small id="textHelp" class="form-text text-muted">Only supported ASCII characters.</small>
             </div>
           </div>
 
           <div class="row justify-content-center mt-2">
+            <div class="col text-center">
+              <button type="button" class="button-add-text btn btn-secondary"><i class="fas fa-plus"></i> Add</button>
+            </div>
             <div class="col text-center">
               <button type="button" class="button-send btn btn-primary"><i class="fas fa-sync"></i> Send</button>
             </div>
@@ -91,7 +113,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em" crossorigin="anonymous"></script>
   <script src="https://d.line-scdn.net/liff/1.0/sdk.js"></script>
-  <script src="liff-starter.js?id=20190302_1551511101"></script>
+  <script src="liff-starter.js?id=20190529_1559123314"></script>
 </body>
 
 </html>
