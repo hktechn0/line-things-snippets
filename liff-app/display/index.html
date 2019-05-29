@@ -36,7 +36,7 @@
   </div>
 
   <div id="device-cards" class="">
-    <div id="device-template" class="my-2" style="display:none;">
+    <div id="device-template" class="my-2" astyle="display:none;">
       <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between py-2">
           <div class="device-name">N/A</div>
@@ -47,16 +47,33 @@
             </a>
           </div>
         </div>
-        <div class="card-body container" style="display:none;">
+        <div class="card-body container" astyle="display:none;">
 
-          <div class="row justify-content-center align-items-center">
+          <div class="row justify-content-center align-items-center input-text-row">
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control input-display-text" aria-describedby="textHelp" placeholder="Enter text">
+                <div class="input-group-append">
+                  <select class="custom-select input-display-color">
+                    <option value="G">Green</option>
+                    <option value="R">Red</option>
+                    <option value="O">Orange</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row justify-content-center align-items-center m-3">
             <div class="col text-center">
-              <input type="text" class="form-control input-display-text" aria-describedby="textHelp" placeholder="Enter text">
               <small id="textHelp" class="form-text text-muted">Only supported ASCII characters.</small>
             </div>
           </div>
 
           <div class="row justify-content-center mt-2">
+            <div class="col text-center">
+              <button type="button" class="button-add-text btn btn-secondary"><i class="fas fa-plus"></i> Add</button>
+            </div>
             <div class="col text-center">
               <button type="button" class="button-send btn btn-primary"><i class="fas fa-sync"></i> Send</button>
             </div>
