@@ -2,6 +2,8 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <FS.h>
+#include <SPIFFS.h>
 #include <HD_0158_RG0019.h>
 
 /**
@@ -54,6 +56,9 @@
 #define N_PANEL 3
 #define FLASH_INTERVAL 2
 
+#define FILE_TEXT_PATH "/text.txt"
+#define FILE_COLOR_PATH "/color.txt"
+
 BLEServer* thingsServer;
 BLESecurity *thingsSecurity;
 BLEService* userService;
@@ -79,6 +84,34 @@ HD_0158_RG0019 matrix(
   PANEL_PIN_A3, PANEL_PIN_A2, PANEL_PIN_A1, PANEL_PIN_A0,
   PANEL_PIN_DG, PANEL_PIN_CLK, PANEL_PIN_WE, PANEL_PIN_DR, PANEL_PIN_ALE);
 
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Writing file: %s\r\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  if (!file) {
+    Serial.println("- failed to open file for writing");
+    return;
+  }
+  if (file.print(message)) {
+    Serial.println("- file written");
+  } else {
+    Serial.println("- frite failed");
+  }
+}
+
+std::string readFile(fs::FS &fs, const char * path) {
+  Serial.printf("Reading file: %s\r\n", path);
+
+  File file = fs.open(path);
+  if (!file || file.isDirectory()) {
+    Serial.println("- failed to open file for reading");
+    return "";
+  }
+
+  Serial.println("- read from file:");
+  return std::string(file.readString().c_str());
+}
+
 class serverCallbacks: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
    deviceConnected = true;
@@ -103,6 +136,7 @@ class writeTextCallback: public BLECharacteristicCallbacks {
     }
     if ((char) value[value.length() - 1] == '\0') {
       displayTextDone = true;
+      writeFile(SPIFFS, FILE_TEXT_PATH, displayText.c_str());
     }
 
     i = INT32_MIN;
@@ -123,6 +157,7 @@ class writeTextColorCallback: public BLECharacteristicCallbacks {
     }
     if ((char) value[value.length() - 1] == '\0') {
       displayColorDone = true;
+      writeFile(SPIFFS, FILE_COLOR_PATH, displayColor.c_str());
     }
 
     i = INT32_MIN;
@@ -139,6 +174,14 @@ void setup() {
   digitalWrite(PANEL_PIN_SE, LOW);
   digitalWrite(PANEL_PIN_ABB, LOW);
 */
+
+  // Read previous text and color settings from SPIFFS
+  if (!SPIFFS.begin(true)) {
+    Serial.println("SPIFFS Mount Failed");
+    return;
+  }
+  displayText = readFile(SPIFFS, FILE_TEXT_PATH);
+  displayColor = readFile(SPIFFS, FILE_COLOR_PATH);
 
   BLEDevice::init("");
   BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
