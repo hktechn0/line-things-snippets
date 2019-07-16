@@ -145,7 +145,7 @@ void setup() {
 
   // Security Settings
   BLESecurity *thingsSecurity = new BLESecurity();
-  thingsSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_ONLY);
+  thingsSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
   thingsSecurity->setCapability(ESP_IO_CAP_NONE);
   thingsSecurity->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 
@@ -197,18 +197,20 @@ void loop() {
       // Default pattern
       matrix.setCursor((i & 0x3ff) - (0x3ff - 96 - 10), 0);
       matrix.setTextColor(DOT_GREEN);
-      matrix.print(">>LINE Things<<  ");
+      matrix.print(">> LINE Things <<  ");
       matrix.setTextColor(DOT_RED);
-      matrix.print("Welcome to ");
+      matrix.print("LINE Things ");
       matrix.setTextColor(i & 0x2 ? DOT_RED : DOT_ORANGE);
-      matrix.print("Digit Hackathon!!");
+      matrix.print("Bluetooth LE ");
+      matrix.setTextColor(DOT_RED);
+      matrix.print("Display!! ");
       matrix.setTextColor(DOT_GREEN);
-      matrix.print("  >>LINE Things<<");
+      matrix.print("  >> LINE Things <<");
     } else {
       int textLength = strlen(displayText.c_str());
-      if (i < -(textLength * 10 + 10)) {
+      if (i < -(textLength * 12 + 12)) {
         // Reset cursor position
-        i = DOT_PANEL_WIDTH * N_PANEL + 10;
+        i = DOT_PANEL_WIDTH * N_PANEL + 12;
       }
       matrix.setCursor(i, 0);
 
