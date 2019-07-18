@@ -4,6 +4,9 @@
 #include <Adafruit_BMP280.h>
 #include <Adafruit_CCS811.h>
 #include <ClosedCube_HDC1080.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <linethings_temp.h>
 
 /**
  * BLE CO2 + environmental sensor using CCS811 + HDC1080 + BMP280 (CJMCU-8128)
@@ -37,12 +40,10 @@
 #define CCS811_ADDR 0x5A
 #define BMP280_ADDR 0x76
 
-uint8_t userServiceUUID[16];
-uint8_t airQualityServiceUUID[16];
-uint8_t co2CharacteristicUUID[16];
-uint8_t tvocCharacteristicUUID[16];
-uint8_t psdiServiceUUID[16];
-uint8_t psdiCharacteristicUUID[16];
+#define MAX_PRPH_CONNECTION 3
+
+uint8_t connection_count = 0;
+unsigned long connected_time[MAX_PRPH_CONNECTION] = { 0 };
 
 BLEService userService;
 BLEService airQualityService;
@@ -55,19 +56,25 @@ BLECharacteristic humidityCharacteristic;
 BLEService psdiService;
 BLECharacteristic psdiCharacteristic;
 
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
 Adafruit_CCS811 ccs;
 ClosedCube_HDC1080 hdc1080;
 Adafruit_BMP280 bme;
+ThingsTemp temp;
 
 SoftwareTimer timerSensor;
 SoftwareTimer timerCalibration;
+SoftwareTimer timerDisconnection;
 volatile bool refreshSensorValue = false;
 volatile bool refreshCalibrationValue = false;
+volatile bool refreshDisconnection = false;
 uint16_t currentCo2;
 uint16_t currentTvoc;
 uint32_t currentPressure;
 int16_t currentTemperature;
 uint16_t currentHumidity;
+
+bool enableDisplay = false;
 
 void setup() {
   Serial.begin(115200);
@@ -82,17 +89,26 @@ void setup() {
     while (true);
   }
   hdc1080.begin(0x40);
+  temp.init();
 
-  Bluefruit.begin();
+  if (display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    enableDisplay = true;
+    display.clearDisplay();
+    display.display();
+  }
+
+  Bluefruit.begin(MAX_PRPH_CONNECTION, 0);
   Bluefruit.setTxPower(4);
   Bluefruit.setName(DEVICE_NAME);
+  Bluefruit.Periph.setConnectCallback(connect_callback);
+  Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
 
   delay(5000);
   while(!ccs.available());
   // Temperature value will be higher than actual on CJMCU-8128 board,
   // because CCS811 sensor has a heater on chip.
   // Set longer interval for setDriveMode() will be better.
-  // ccs.setDriveMode(CCS811_DRIVE_MODE_10SEC);
+  ccs.setDriveMode(CCS811_DRIVE_MODE_10SEC);
   ccs.setEnvironmentalData(hdc1080.readHumidity(), hdc1080.readTemperature());
 
   setupServices();
@@ -103,6 +119,8 @@ void setup() {
   timerSensor.start();
   timerCalibration.begin(600000, triggerRefreshCalibrationValue);
   timerCalibration.start();
+  timerDisconnection.begin(60000, triggerDisconnection);
+  timerDisconnection.start();
 }
 
 void triggerRefreshSensorValue(TimerHandle_t xTimer) {
@@ -113,40 +131,52 @@ void triggerRefreshCalibrationValue(TimerHandle_t xTimer) {
   refreshCalibrationValue = true;
 }
 
+void triggerDisconnection(TimerHandle_t xTimer) {
+  refreshDisconnection = true;
+}
+
 void loop() {
   if (refreshSensorValue && ccs.available() && !ccs.readData()) {
     uint16_t co2Value = ccs.geteCO2();
     uint16_t tvocValue = ccs.getTVOC();
     uint32_t pressureValue = bme.readPressure() * 10;
+    uint32_t temperatureBme = bme.readTemperature() * 100;
     int16_t temperatureValue = hdc1080.readTemperature() * 100;
     uint16_t humidityValue = hdc1080.readHumidity() * 100;
+    uint32_t temperatureAtmel = temp.read() * 100;
 
     // Set sensor values to characteristics
-    if (currentCo2 != co2Value) {
-      co2Characteristic.notify16(co2Value);
-      currentCo2 = co2Value;
+    for (uint8_t conn_hdl = 0; conn_hdl < MAX_PRPH_CONNECTION; conn_hdl++) {
+      if (currentCo2 != co2Value) {
+        co2Characteristic.notify16(conn_hdl, co2Value);
+      }
+      if (currentTvoc != tvocValue) {
+        tvocCharacteristic.notify16(conn_hdl, tvocValue);
+      }
+      if (currentPressure != pressureValue) {
+        pressureCharacteristic.notify32(conn_hdl, pressureValue);
+      }
+      if (currentTemperature != temperatureValue) {
+        temperatureCharacteristic.notify16(conn_hdl, (uint16_t) temperatureValue);
+      }
+      if (currentHumidity != humidityValue) {
+        humidityCharacteristic.notify16(conn_hdl, humidityValue);
+      }
     }
-    if (currentTvoc != tvocValue) {
-      tvocCharacteristic.notify16(tvocValue);
-      currentTvoc = tvocValue;
-    }
-    if (currentPressure != pressureValue) {
-      pressureCharacteristic.notify32(pressureValue);
-      currentPressure = pressureValue;
-    }
-    if (currentTemperature != temperatureValue) {
-      temperatureCharacteristic.notify16((uint16_t) temperatureValue);
-      currentTemperature = temperatureValue;
-    }
-    if (currentHumidity != humidityValue) {
-      humidityCharacteristic.notify16(humidityValue);
-      currentHumidity = humidityValue;
-    }
+    currentCo2 = co2Value;
+    currentTvoc = tvocValue;
+    currentPressure = pressureValue;
+    currentTemperature = temperatureValue;
+    currentHumidity = humidityValue;
 
     refreshSensorValue = false;
 
     Serial.print("Temperature: ");
     Serial.print(temperatureValue / 100.0);
+    Serial.print(" / ");
+    Serial.print(temperatureBme / 100.0);
+    Serial.print(" / ");
+    Serial.print(temperatureAtmel / 100.0);
     Serial.println(" *C");
 
     Serial.print("Pressure: ");
@@ -159,20 +189,58 @@ void loop() {
 
     Serial.print("CO2: ");
     Serial.print(co2Value);
-    Serial.print("ppm, TVOC: ");
+    Serial.print("ppm\nTVOC: ");
     Serial.print(tvocValue);
     Serial.println("ppb");
 
     Serial.println();
+
+    if (enableDisplay) {
+      display.clearDisplay();
+      display.setTextColor(WHITE);
+      display.setCursor(0, 0);
+      display.print(temperatureValue / 100.0);
+      display.print(" / ");
+      display.print(temperatureBme / 100.0);
+      display.print(" / ");
+      display.print(temperatureAtmel / 100.0);
+      display.println(" *C");
+      display.print(pressureValue / 1000);
+      display.println(" hPa");
+      display.print(humidityValue / 100.0);
+      display.println(" %");
+      display.print("CO2: ");
+      display.print(co2Value);
+      display.print("ppm\nTVOC: ");
+      display.print(tvocValue);
+      display.println("ppb");
+      display.display();
+    }
   }
 
   if (refreshCalibrationValue) {
     ccs.setEnvironmentalData(hdc1080.readHumidity(), hdc1080.readTemperature());
     refreshCalibrationValue = false;
   }
+  if (refreshDisconnection) {
+    // Disconnect stucked connection
+    for (uint8_t conn_hdl = 0; conn_hdl < MAX_PRPH_CONNECTION; conn_hdl++) {
+      if (connected_time[conn_hdl] > 0 && millis() - connected_time[conn_hdl] > 60000) {
+        Bluefruit.disconnect(conn_hdl);
+      }
+    }
+    refreshDisconnection = false;
+  }
 }
 
 void setupServices(void) {
+  uint8_t userServiceUUID[16];
+  uint8_t airQualityServiceUUID[16];
+  uint8_t co2CharacteristicUUID[16];
+  uint8_t tvocCharacteristicUUID[16];
+  uint8_t psdiServiceUUID[16];
+  uint8_t psdiCharacteristicUUID[16];
+
   // Convert String UUID to raw UUID bytes
   strUUID2Bytes(USER_SERVICE_UUID, userServiceUUID);
   strUUID2Bytes(AIR_QUALITY_MONITOR_SERVICE_UUID, airQualityServiceUUID);
@@ -244,6 +312,40 @@ void startAdvertising(void) {
   Bluefruit.ScanResponse.addName();
   Bluefruit.Advertising.restartOnDisconnect(true);
   Bluefruit.Advertising.start(0);
+}
+
+void connect_callback(uint16_t conn_handle) {
+  // Get the reference to current connection
+  BLEConnection* connection = Bluefruit.Connection(conn_handle);
+
+  char central_name[32] = { 0 };
+  connection->getPeerName(central_name, sizeof(central_name));
+
+  Serial.print("Connected to ");
+  Serial.println(central_name);
+
+  connection_count++;
+  Serial.print("Connection count: ");
+  Serial.println(connection_count);
+  
+  connected_time[conn_handle] = millis();
+
+  // Keep advertising if not reaching max
+  if (connection_count < MAX_PRPH_CONNECTION) {
+    Serial.println("Keep advertising");
+    Bluefruit.Advertising.start(0);
+  }
+}
+
+void disconnect_callback(uint16_t conn_handle, uint8_t reason) {
+  (void) conn_handle;
+  (void) reason;
+
+  Serial.println();
+  Serial.println("Disconnected");
+
+  connection_count--;
+  connected_time[conn_handle] = 0;
 }
 
 // UUID Converter
