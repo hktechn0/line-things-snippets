@@ -11,7 +11,7 @@
  * https://github.com/techno/arduino-HD-0158-RG0019
  */
 
-// HD_0158_RG0019 library doesn't use manual RAM control.
+// HD-0158-RG0019 library doesn't use manual RAM control.
 // Set SE and ABB low.
 #define PANEL_PIN_A3  16
 #define PANEL_PIN_A2  17
@@ -68,34 +68,37 @@ BLECharacteristic* writeTextColorCharacteristic;
 BLEService* psdiService;
 BLECharacteristic* psdiCharacteristic;
 
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
+volatile bool deviceConnected = false;
+volatile bool oldDeviceConnected = false;
 
-std::string displayText = "";
-std::string displayColor = "";
+String displayText  = "LINE Things - Bluetooth LE Display!!";
+String displayColor = "GGGGGGGGGGGGROOOOOOOOOOOOOORRRRRRRWW";
 bool displayTextDone = true;
 bool displayColorDone = true;
 
-int32_t i = INT32_MIN;
-uint32_t lastUpdated;
+volatile int32_t pos = INT32_MIN;
+volatile bool saveToFile = false;
+unsigned long lastUpdated;
 
 HD_0158_RG0019 matrix(
   N_PANEL,
   PANEL_PIN_A3, PANEL_PIN_A2, PANEL_PIN_A1, PANEL_PIN_A0,
   PANEL_PIN_DG, PANEL_PIN_CLK, PANEL_PIN_WE, PANEL_PIN_DR, PANEL_PIN_ALE);
 
-void writeFile(fs::FS &fs, const char * path, const char * message) {
+bool writeFile(fs::FS &fs, const char * path, const char * message) {
   Serial.printf("Writing file: %s\r\n", path);
 
   File file = fs.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("- failed to open file for writing");
-    return;
+    return true;
   }
   if (file.print(message)) {
     Serial.println("- file written");
+    return false;
   } else {
-    Serial.println("- frite failed");
+    Serial.println("- write failed");
+    return true;
   }
 }
 
@@ -124,43 +127,49 @@ class serverCallbacks: public BLEServerCallbacks {
 
 class writeTextCallback: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *bleWriteCharacteristic) {
-    std::string value = bleWriteCharacteristic->getValue();
-    Serial.println(value.c_str());
+    std::string v = bleWriteCharacteristic->getValue();
+    String value = String(v.c_str());
+    
+    Serial.print("Text: ");
+    Serial.println(value);
 
     // Read text from payload, ends with '\0'
     if (displayTextDone) {
       displayTextDone = false;
-      displayText = std::string(value);
+      displayText = value;
     } else {
       displayText += value;
     }
-    if ((char) value[value.length() - 1] == '\0') {
+    if (v.at(v.length() - 1) == '\0') {
       displayTextDone = true;
-      writeFile(SPIFFS, FILE_TEXT_PATH, displayText.c_str());
+      saveToFile = true;
     }
 
-    i = INT32_MIN;
+    pos = INT32_MIN;
   }
 };
 
 class writeTextColorCallback: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *bleWriteCharacteristic) {
-    std::string value = bleWriteCharacteristic->getValue();
-    Serial.println(value.c_str());
+    std::string v = bleWriteCharacteristic->getValue();
+    String value = String(v.c_str());
+
+    Serial.print("Color: ");
+    Serial.println(value);
 
     // Read color from payload, ends with '\0'
     if (displayColorDone) {
       displayColorDone = false;
-      displayColor = std::string(value);
+      displayColor = value;
     } else {
       displayColor += value;
     }
-    if ((char) value[value.length() - 1] == '\0') {
+    if (v.at(v.length() - 1) == '\0') {
       displayColorDone = true;
-      writeFile(SPIFFS, FILE_COLOR_PATH, displayColor.c_str());
+      saveToFile = true;
     }
 
-    i = INT32_MIN;
+    pos = INT32_MIN;
   }
 };
 
@@ -168,20 +177,29 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Initializing...");
 
-/*
+#ifdef PANEL_PIN_SE
   pinMode(PANEL_PIN_SE, OUTPUT);
-  pinMode(PANEL_PIN_ABB, OUTPUT);
   digitalWrite(PANEL_PIN_SE, LOW);
+#endif
+#ifdef PANEL_PIN_ABB
+  pinMode(PANEL_PIN_ABB, OUTPUT);
   digitalWrite(PANEL_PIN_ABB, LOW);
-*/
+#endif
 
   // Read previous text and color settings from SPIFFS
   if (!SPIFFS.begin(true)) {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
-  displayText = readFile(SPIFFS, FILE_TEXT_PATH);
-  displayColor = readFile(SPIFFS, FILE_COLOR_PATH);
+  displayText = String(readFile(SPIFFS, FILE_TEXT_PATH).c_str());
+  displayColor = String(readFile(SPIFFS, FILE_COLOR_PATH).c_str());
+
+  if (writeFile(SPIFFS, FILE_TEXT_PATH, displayText.c_str())
+      || writeFile(SPIFFS, FILE_COLOR_PATH, displayColor.c_str())) {
+    // FS has some problem.
+    Serial.println("Format SPIFFS...");
+    SPIFFS.format();
+  }
 
   BLEDevice::init("");
   BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
@@ -216,93 +234,82 @@ void loop() {
     oldDeviceConnected = deviceConnected;
   }
 
-  /*
-  Serial.println("DOT_GREEN");
-  matrix.fillScreen(DOT_GREEN);
-  delay(5000);
-  Serial.println("DOT_RED");
-  matrix.fillScreen(DOT_RED);
-  delay(5000);
-  Serial.println("DOT_ORANGE");
-  matrix.fillScreen(DOT_ORANGE);
-  delay(5000);
-  */
-
   if (lastUpdated + 50 < millis() && displayTextDone && displayColorDone) {
     lastUpdated = millis();
+    // Copy text to prevent overriting on event handler
+    updateDisplay(String(displayText), String(displayColor));
+  }
 
-    matrix.startWrite();
-    matrix.fillScreen(DOT_BLACK);
+  if (saveToFile && displayTextDone && displayColorDone) {
+    saveToFile = false;
+    writeFile(SPIFFS, FILE_TEXT_PATH, String(displayText).c_str());
+    writeFile(SPIFFS, FILE_COLOR_PATH, String(displayColor).c_str());
+  }
+}
 
-    // Serial.println(displayText.c_str());
+void updateDisplay(String text, String color) {
+  matrix.startWrite();
+  matrix.fillScreen(DOT_BLACK);
 
-    if (strlen(displayText.c_str()) < 1) {
-      // Default pattern
-      matrix.setCursor((i & 0x3ff) - (0x3ff - 96 - 10), 0);
+  if (pos < (int32_t) -(text.length() * 12 + 12)) {
+    // Reset cursor position
+    pos = DOT_PANEL_WIDTH * N_PANEL + 12;
+  } else {
+    pos--;
+  }
+  matrix.setCursor(pos, 0);
+
+  // Serial.println(pos);
+  // Serial.print(text.length());
+  // Serial.print(" ");
+  // Serial.println(text);
+  // Serial.print(color.length());
+  // Serial.print(" ");
+  // Serial.println(color);
+
+  // G: Green, R: Red, O: Orange
+  // U: Green-Red flash, V: Green-Orange flash, W: Red-Orange flash
+  // X: Green flash, Y: Red flash, Z: Orange flash
+  for (unsigned int i = 0; i < text.length(); i++) {
+    if (i == 0 && color.length() <= 0) {
       matrix.setTextColor(DOT_GREEN);
-      matrix.print(">> LINE Things <<  ");
-      matrix.setTextColor(DOT_RED);
-      matrix.print("LINE Things ");
-      matrix.setTextColor(i & 0x2 ? DOT_RED : DOT_ORANGE);
-      matrix.print("Bluetooth LE ");
-      matrix.setTextColor(DOT_RED);
-      matrix.print("Display!! ");
-      matrix.setTextColor(DOT_GREEN);
-      matrix.print("  >> LINE Things <<");
-    } else {
-      int textLength = strlen(displayText.c_str());
-      if (i < -(textLength * 12 + 12)) {
-        // Reset cursor position
-        i = DOT_PANEL_WIDTH * N_PANEL + 12;
-      }
-      matrix.setCursor(i, 0);
-
-      // G: Green, R: Red, O: Orange
-      // U: Green-Red flash, V: Green-Orange flash, W: Red-Orange flash
-      // X: Green flash, Y: Red flash, Z: Orange flash
-      for (unsigned int j = 0; j < textLength; j++) {
-        if (j == 0 && strlen(displayColor.c_str()) <= 0) {
+    } else if (i <= color.length() && (i == 0 || color.charAt(i - 1) != color.charAt(i))) {
+      switch (color.charAt(i)) {
+        case 'G':
           matrix.setTextColor(DOT_GREEN);
-        } else if (j <= strlen(displayColor.c_str()) && (j == 0 || displayColor.at(j - 1) != displayColor.at(j))) {
-          switch (displayColor.at(j)) {
-            case 'G':
-              matrix.setTextColor(DOT_GREEN);
-              break;
-            case 'R':
-              matrix.setTextColor(DOT_RED);
-              break;
-            case 'O':
-              matrix.setTextColor(DOT_ORANGE);
-              break;
-            case 'U':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_GREEN : DOT_RED);
-              break;
-            case 'V':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_GREEN : DOT_ORANGE);
-              break;
-            case 'W':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_RED : DOT_ORANGE);
-              break;
-            case 'X':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_GREEN : DOT_BLACK);
-              break;
-            case 'Y':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_RED : DOT_BLACK);
-              break;
-            case 'Z':
-              matrix.setTextColor(i & FLASH_INTERVAL ? DOT_ORANGE : DOT_BLACK);
-              break;
-            default:
-              break;
-          }
-        }
-        matrix.print(displayText.at(j));
+          break;
+        case 'R':
+          matrix.setTextColor(DOT_RED);
+          break;
+        case 'O':
+          matrix.setTextColor(DOT_ORANGE);
+          break;
+        case 'U':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_GREEN : DOT_RED);
+          break;
+        case 'V':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_GREEN : DOT_ORANGE);
+          break;
+        case 'W':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_RED : DOT_ORANGE);
+          break;
+        case 'X':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_GREEN : DOT_BLACK);
+          break;
+        case 'Y':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_RED : DOT_BLACK);
+          break;
+        case 'Z':
+          matrix.setTextColor(pos & FLASH_INTERVAL ? DOT_ORANGE : DOT_BLACK);
+          break;
+        default:
+          break;
       }
     }
-
-    matrix.endWrite();
-    i--;
+    matrix.print(text.charAt(i));
   }
+
+  matrix.endWrite();
 }
 
 void setupServices(void) {
