@@ -5,15 +5,15 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <Adafruit_GFX.h>
-/*
-#include <Adafruit_NeoMatrix.h>
-#include <Adafruit_NeoPixel.h>
-*/
+// Adafruit original library doesn't work well on ESP32
+// #include <Adafruit_NeoMatrix.h>
+// #include <Adafruit_NeoPixel.h>
 #include <FastLED_NeoMatrix.h>
 #include <FastLED.h>
+#include <M5StickC.h>
 
 /**
- * Example for Neopixel matrix RGB LED panel
+ * Example for Neopixel matrix RGB LED panel using M5StickC
  * Original Adafruit NeoMatrix library doesn't work well on ESP32
  * https://github.com/marcmerlin/FastLED_NeoMatrix
  */
@@ -44,22 +44,34 @@
 #define MATRIX_HEIGHT 4
 #define TILES_X 4
 #define TILES_Y 2
+
+// For 32 x 8 matrix
+// #define MATRIX_WIDTH 32
+// #define MATRIX_HEIGHT 8
+// #define TILES_X 1
+// #define TILES_Y 1
+
 #define NUMMATRIX (MATRIX_WIDTH * TILES_X * MATRIX_HEIGHT * TILES_Y)
 
-/*
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-  MATRIX_WIDTH, MATRIX_HEIGHT, TILES_X, TILES_Y,
-  PIN_NEOPIXEL,
-  NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_ROWS + NEO_TILE_PROGRESSIVE +
-  NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
-  NEO_GRB + NEO_KHZ800);
-*/
+// Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
+//   MATRIX_WIDTH, MATRIX_HEIGHT, TILES_X, TILES_Y,
+//   PIN_NEOPIXEL,
+//   NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_ROWS + NEO_TILE_PROGRESSIVE +
+//   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
+//   NEO_GRB + NEO_KHZ800);
 
 CRGB leds[NUMMATRIX];
+
 FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
   leds, MATRIX_WIDTH, MATRIX_HEIGHT, TILES_X, TILES_Y,
   NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_ROWS + NEO_TILE_PROGRESSIVE +
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG);
+
+// For 32 x 8 matrix
+// FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
+//   leds, MATRIX_WIDTH, MATRIX_HEIGHT, TILES_X, TILES_Y,
+//   NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_ROWS + NEO_TILE_PROGRESSIVE +
+//   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG);
 
 const uint16_t DOT_BLACK = matrix->Color(0, 0, 0);
 const uint16_t DOT_GREEN = matrix->Color(0, 255, 0);
@@ -167,7 +179,7 @@ class writeTextColorCallback: public BLECharacteristicCallbacks {
 };
 
 void setup() {
-  Serial.begin(115200);
+  M5.begin();
   Serial.println("Initializing...");
   FastLED.addLeds<NEOPIXEL,PIN_NEOPIXEL>(leds, NUMMATRIX); 
 
@@ -184,13 +196,18 @@ void setup() {
 
   // Security Settings
   BLESecurity *thingsSecurity = new BLESecurity();
-  thingsSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_ONLY);
+  thingsSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
   thingsSecurity->setCapability(ESP_IO_CAP_NONE);
   thingsSecurity->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 
   setupServices();
   startAdvertising();
   Serial.println("Ready to Connect");
+
+  M5.Lcd.fillScreen(TFT_BLACK);
+  M5.Lcd.setTextColor(YELLOW);
+  M5.Lcd.setCursor(0, 0);   
+  M5.Lcd.print("Ready to Connect");
 
   delay(100);
 
