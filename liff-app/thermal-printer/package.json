@@ -1,0 +1,17 @@
+{
+  "name": "line-things-qa-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "liff-starter.js",
+  "scripts": {
+    "start": "http-server -c10 .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.linecorp.com/mark-serrano/line-things-qa-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

@@ -1,0 +1,6 @@
+[submodule "liff-app/thermal-printer/canvas-dither"]
+	path = liff-app/thermal-printer/canvas-dither
+	url = https://github.com/ticky/canvas-dither.git
+[submodule "liff-app/thermal-printer/CanvasDither"]
+	path = liff-app/thermal-printer/CanvasDither
+	url = https://github.com/NielsLeenheer/CanvasDither.git
