@@ -51,7 +51,7 @@
           <nav class="row">
             <div class="nav nav-tabs col" role="tablist">
               <a class="nav-item nav-link small active" id="nav-line-tab" data-toggle="tab" href="#nav-line" role="tab" aria-controls="nav-line" aria-selected="true">LINE</a>
-              <a class="nav-item nav-link small" id="nav-text-tab" data-toggle="tab" href="#nav-text" role="tab" aria-controls="nav-text" aria-selected="true">Text</a>
+              <a class="nav-item nav-link small" id="nav-text-tab" data-toggle="tab" href="#nav-text" role="tab" aria-controls="nav-text" aria-selected="true">Text & QR</a>
               <a class="nav-item nav-link small" id="nav-image-tab" data-toggle="tab" href="#nav-image" role="tab" aria-controls="nav-image" aria-selected="false">Image</a>
             </div>
           </nav>
@@ -95,7 +95,7 @@
               </div>
             </div>
             <div class="tab-pane fade col" id="nav-text" role="tabpanel" aria-labelledby="nav-text-tab">
-              <div class="form-text-command row no-gutters mb-3">
+              <div class="form-text-command form-command row no-gutters mb-3">
                 <div class="col">
                   <div class="input-group input-group-sm mb-1">
                     <div class="input-group-prepend">
@@ -126,10 +126,28 @@
                   </div>
                 </div>
               </div>
-              <div class="row text-center">
+              <div class="form-qr-command form-command row no-gutters mb-3" style="display:none">
+                <div class="col">
+                  <div class="input-group input-group-sm mb-1">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text"><i class="fas fa-qrcode"></i></label>
+                    </div>
+                    <input type="text" name="qr" class="value-input-qr form-control" placeholder="URL or Text">
+                  </div>
+                  <div class="card text-center">
+                    <div class="view-qr"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row text-center form-command-buttons">
                 <div class="col">
                   <button class="add-input btn btn-secondary">
                     <i class="fas fa fa-plus" aria-hidden="true"></i> Add
+                  </button>
+                </div>
+                <div class="col">
+                  <button class="add-qr btn btn-secondary">
+                      <i class="fas fa-qrcode"></i> QR Code
                   </button>
                 </div>
                 <div class="col">
@@ -195,8 +213,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em" crossorigin="anonymous"></script>
   <script src="https://d.line-scdn.net/liff/1.0/sdk.js"></script>
-  <script src="CanvasDither/dist/canvas-dither.js"></script>
-  <script src="liff-starter.js?id=20190402_1554191880"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-dither@1.0.0/src/canvas-dither.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+  <script src="liff-starter.js?id=20190402_1554191894"></script>
 </body>
 
 </html>

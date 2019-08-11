@@ -205,11 +205,28 @@ function initializeCardForDevice(device) {
     });
 
     // Add input form button
-    const form = template.querySelector('.form-text-command').cloneNode(true);
     template.querySelector('.add-input').addEventListener('click', () => {
         onScreenLog('Clicked add input button');
-        const commandForms = getTextCommandForms(device);
-        commandForms[commandForms.length - 1].after(form.cloneNode(true));
+        const formText = template.querySelector('.form-text-command').cloneNode(true);
+        template.querySelector('.form-command-buttons').before(formText);
+    });
+    template.querySelector('.add-qr').addEventListener('click', () => {
+        onScreenLog('Clicked add QR button');
+        const formQR = template.querySelector('.form-qr-command').cloneNode(true);
+        const qrcode = new QRCode(formQR.querySelector('.view-qr'), {
+            text: "",
+            width: 128,
+            height: 128,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.M
+        });
+        formQR.querySelector('.value-input-qr').addEventListener('change', e => {
+            qrcode.clear();
+            qrcode.makeCode(e.target.value);
+        });
+        formQR.style.display = 'block';
+        template.querySelector('.form-command-buttons').before(formQR);
     });
 
     // Image processing
@@ -370,7 +387,8 @@ async function renderProfileToCanvas(device) {
             (PAPER_WIDTH - imageWidth) / 2, 0, imageWidth, imageWidth);
     }
 
-    await drawImageFromURL(canvas, "./LINE_APP.png", (PAPER_WIDTH - 100) / 2, imageWidth + 175, 100, 100, 1);
+    await drawImageFromURL(
+        canvas, "./LINE_APP.png", (PAPER_WIDTH - 100) / 2, imageWidth + 175, 100, 100, 1);
 
     const offsetY = imageWidth + 75;
     ctx.strokeStyle = 'black';
@@ -383,7 +401,7 @@ async function renderProfileToCanvas(device) {
 
     // threshold for text
     const image = ctx.getImageData(0, 0, PAPER_WIDTH, PAPER_HEIGHT);
-    const dithered = CanvasDither.threshold(image, 190);
+    const dithered = new CanvasDither().threshold(image, 190);
     ctx.putImageData(dithered, 0, 0);
 }
 
@@ -449,45 +467,105 @@ function drawImage(canvas, image, x, y, width, height, mode=0) {
     const source = ctx.getImageData(x, y, width, height);
     let dithered;
     if (mode == 1) {
-        dithered = CanvasDither.threshold(source, 200);
+        dithered = new CanvasDither().threshold(source, 200);
     } else {
-        dithered = CanvasDither.atkinson(source);
+        dithered = new CanvasDither().atkinson(source);
     }
     ctx.putImageData(dithered, x, y);
 
     onScreenLog(`Rendered image: ${width}x${height} on ${x}:${y}`);
 }
 
-async function refreshImageDisplay(device, canvas, progressBarClass) {
+async function refreshImageDisplay(device, canvas, progressBarClass=null) {
     if (!connectedUUIDSet.has(device.id)) {
         window.alert('Please connect to a device first');
         onScreenLog('Please connect to a device first.');
         return;
     }
+
+    const commandCharacteristic = await getCharacteristic(
+        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
+
+    await writeCharacteristic(commandCharacteristic, [CMD_WAKE]);
+    await writeCharacteristic(commandCharacteristic, [CMD_SET_DEFAULT]);
+
+    await sendImageData(device, canvas, progressBarClass);
+
+    await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
+    await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
+}
+
+async function refreshTextDisplay(device) {
+    if (!connectedUUIDSet.has(device.id)) {
+        window.alert('Please connect to a device first');
+        onScreenLog('Please connect to a device first.');
+        return;
+    }
+
+    const commandCharacteristic = await getCharacteristic(
+        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
+
+    await writeCharacteristic(commandCharacteristic, [CMD_WAKE]);
+    await writeCharacteristic(commandCharacteristic, [CMD_SET_DEFAULT]);
+
+    for (const f of getCommandForms(device)) {
+        if (f.classList.contains("form-qr-command")) {
+            const textValue = f.querySelector('.value-input-qr').value;
+            if (!textValue || textValue.length == 0) {
+                continue;
+            }
+
+            await writeCharacteristic(commandCharacteristic, [CMD_FEED, 1]);
+            await sendImageData(device, f.querySelector('canvas'));
+            await writeCharacteristic(commandCharacteristic, [CMD_FEED, 1]);
+            continue;
+        }
+
+        const textValue = f.querySelector('.value-input-text').value;
+        const size = f.querySelector('.value-font-size').value;
+        const style = f.querySelector('.value-font-style').value;
+        const justify = f.querySelector('.value-font-justify').value;
+        onScreenLog(`Text: "${textValue}" ${size} ${style} ${justify}`);
+
+        if (!textValue || textValue.length == 0) {
+            continue;
+        }
+
+        await writeCharacteristic(commandCharacteristic, [CMD_TEXT_JUSTIFY, justify.charCodeAt()]);
+        await writeCharacteristic(commandCharacteristic, [CMD_TEXT_STYLE, style.charCodeAt()]);
+        await writeCharacteristic(commandCharacteristic,
+            [CMD_TEXT_SIZE, size.charAt(0).charCodeAt(), size.charAt(1).charCodeAt()]);
+        await writeCharacteristic(commandCharacteristic, [CMD_TEXT_PRINTLN]
+            .concat(Array.from(textValue).map(c => c.charCodeAt()))
+            .concat([0]));
+    };
+
+    await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
+    await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
+}
+
+async function sendImageData(device, canvas, progressBarClass=null) {
+    const commandCharacteristic = await getCharacteristic(
+        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
+    const dummyCharacteristic = await getCharacteristic(
+        device, PSDI_SERVICE_UUID, PSDI_CHARACTERISTIC_UUID);
+
     if (!canvas.getContext) {
         onScreenLog("Canvas is not supported on this device.");
         return;
     }
 
     const ctx = canvas.getContext('2d');
-    const commandCharacteristic = await getCharacteristic(
-        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
-    const dummyCharacteristic = await getCharacteristic(
-        device, PSDI_SERVICE_UUID, PSDI_CHARACTERISTIC_UUID);
-
-    await writeCharacteristic(commandCharacteristic, [CMD_WAKE]);
-    await writeCharacteristic(commandCharacteristic, [CMD_SET_DEFAULT]);
-
-    const imageData = ctx.getImageData(0, 0, PAPER_WIDTH, PAPER_HEIGHT).data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data
         .map((p, i, arr) => (p > 0 || arr[i+3] == 0) ? 0 : 1)
         .filter((p, i) => i % 4 == 0);
 
-    for (const y in [...Array(PAPER_HEIGHT).keys()]) {
+    for (const y in [...Array(canvas.height).keys()]) {
         const intY = parseInt(y, 10);
-        const row = [...Array(Math.floor(PAPER_WIDTH / 8)).keys()]
+        const row = [...Array(Math.floor(canvas.width / 8)).keys()]
             .map(x => x * 8)
             .map(x => imageData
-                .slice(y * PAPER_WIDTH + x, y * PAPER_WIDTH + x + 8)
+                .slice(y * canvas.width + x, y * canvas.width + x + 8)
                 .reduce((acc, cur) => (acc << 1) | cur, 0))
             .reduce((acc, bitmap, i) => {
                 const bufY = intY % BUFFER_HEIGHT;
@@ -509,10 +587,11 @@ async function refreshImageDisplay(device, canvas, progressBarClass) {
             return writeCharacteristic(commandCharacteristic, command);
         }));
 
-        if (y % BUFFER_HEIGHT == BUFFER_HEIGHT - 1) {
+        if (y % BUFFER_HEIGHT == BUFFER_HEIGHT - 1 || y == canvas.height - 1) {
+            const printY = (y % BUFFER_HEIGHT) + 1;
             await writeCharacteristic(
                 commandCharacteristic,
-                [CMD_BITMAP_FLUSH, BUFFER_HEIGHT & 0xff, BUFFER_HEIGHT >> 8]);
+                [CMD_BITMAP_FLUSH, printY & 0xff, printY >> 8]);
         }
 
         if (y % 20 == 0) {
@@ -520,49 +599,10 @@ async function refreshImageDisplay(device, canvas, progressBarClass) {
             await dummyCharacteristic.readValue();
         }
 
-        updateDeviceProgress(device, progressBarClass, Math.floor((intY + 1) / PAPER_HEIGHT * 100));
-    }
-
-    await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
-    await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
-}
-
-async function refreshTextDisplay(device) {
-    if (!connectedUUIDSet.has(device.id)) {
-        window.alert('Please connect to a device first');
-        onScreenLog('Please connect to a device first.');
-        return;
-    }
-
-    const commandCharacteristic = await getCharacteristic(
-        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
-
-    await writeCharacteristic(commandCharacteristic, [CMD_WAKE]);
-    await writeCharacteristic(commandCharacteristic, [CMD_SET_DEFAULT]);
-
-    await Promise.all([...getTextCommandForms(device)].flatMap(f => {
-        const textValue = f.querySelector('.value-input-text').value;
-        const size = f.querySelector('.value-font-size').value;
-        const style = f.querySelector('.value-font-style').value;
-        const justify = f.querySelector('.value-font-justify').value;
-        onScreenLog(`Text: "${textValue}" ${size} ${style} ${justify}`);
-
-        if (!textValue || textValue.length == 0) {
-            return;
+        if (progressBarClass) {
+            updateDeviceProgress(device, progressBarClass, Math.floor((intY + 1) / canvas.height * 100));
         }
-
-        return [
-            writeCharacteristic(commandCharacteristic, [CMD_TEXT_JUSTIFY, justify.charCodeAt()]),
-            writeCharacteristic(commandCharacteristic, [CMD_TEXT_STYLE, style.charCodeAt()]),
-            writeCharacteristic(commandCharacteristic, [CMD_TEXT_SIZE, size.charAt(0).charCodeAt(), size.charAt(1).charCodeAt()]),
-            writeCharacteristic(commandCharacteristic, [CMD_TEXT_PRINTLN]
-                .concat(Array.from(textValue).map(c => c.charCodeAt()))
-                .concat([0]))
-        ];
-    }));
-
-    await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
-    await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
+    }
 }
 
 async function readCharacteristic(characteristic) {
@@ -620,8 +660,8 @@ function getProfileCommandForm(device) {
     return getDeviceCard(device).getElementsByClassName('form-profile-command')[0];
 }
 
-function getTextCommandForms(device) {
-    return getDeviceCard(device).getElementsByClassName('form-text-command');
+function getCommandForms(device) {
+    return getDeviceCard(device).getElementsByClassName('form-command');
 }
 
 function getImageCanvas(device) {
