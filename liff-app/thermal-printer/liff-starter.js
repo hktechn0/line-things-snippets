@@ -515,6 +515,7 @@ async function refreshTextDisplay(device) {
                 continue;
             }
 
+            onScreenLog(`QR: "${textValue}"`);
             await writeCharacteristic(commandCharacteristic, [CMD_FEED, 1]);
             await sendImageData(device, f.querySelector('canvas'));
             await writeCharacteristic(commandCharacteristic, [CMD_FEED, 1]);
@@ -525,19 +526,24 @@ async function refreshTextDisplay(device) {
         const size = f.querySelector('.value-font-size').value;
         const style = f.querySelector('.value-font-style').value;
         const justify = f.querySelector('.value-font-justify').value;
-        onScreenLog(`Text: "${textValue}" ${size} ${style} ${justify}`);
-
         if (!textValue || textValue.length == 0) {
             continue;
         }
 
+        onScreenLog(`Text: "${textValue}" ${size} ${style} ${justify}`);
         await writeCharacteristic(commandCharacteristic, [CMD_TEXT_JUSTIFY, justify.charCodeAt()]);
         await writeCharacteristic(commandCharacteristic, [CMD_TEXT_STYLE, style.charCodeAt()]);
-        await writeCharacteristic(commandCharacteristic,
-            [CMD_TEXT_SIZE, size.charAt(0).charCodeAt(), size.charAt(1).charCodeAt()]);
-        await writeCharacteristic(commandCharacteristic, [CMD_TEXT_PRINTLN]
-            .concat(Array.from(textValue).map(c => c.charCodeAt()))
-            .concat([0]));
+        await writeCharacteristic(commandCharacteristic, [CMD_TEXT_SIZE, size.charCodeAt()]);
+
+        // Usually, Japanese characters in UTF-8 is 3 byte.
+        // 3 bytes * 6 chars = 18 bytes + NUL + COMMAND
+        for (let i = 0; i < textValue.length; i += 6) {
+            const textBytes = Array.from(new TextEncoder("utf-8").encode(textValue.slice(i, i + 6)));
+            await writeCharacteristic(
+                commandCharacteristic,
+                [i + 6 < textValue.length ? CMD_TEXT_PRINT : CMD_TEXT_PRINTLN]
+                    .concat(textBytes).concat([0]));
+        }
     };
 
     await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
