@@ -15,6 +15,7 @@ const CMD_SET_DEFAULT = 0x03;
 const CMD_WAKE        = 0x04;
 const CMD_SLEEP       = 0x05;
 const CMD_FEED        = 0x06;
+const CMD_FEED_ROWS   = 0x07;
 const CMD_BITMAP_WRITE  = 0x10;
 const CMD_BITMAP_FLUSH  = 0x11;
 const CMD_TEXT_PRINT    = 0x20;
@@ -430,8 +431,9 @@ function renderImageToCanvas(device, dataUrl) {
 
         if (ratioHeight > ratioWidth) {
             const height = Math.floor(image.height * ratioWidth);
-            const y = Math.floor((PAPER_HEIGHT - height) / 2);
-            drawImage(canvas, image, 0, y, PAPER_WIDTH, height);
+            //const y = Math.floor((PAPER_HEIGHT - height) / 2);
+            canvas.height = height;
+            drawImage(canvas, image, 0, 0, PAPER_WIDTH, height);
         } else {
             const width = Math.floor(image.width * ratioHeight);
             //const x = Math.floor((DISPLAY_CANVAS_WIDTH - width) / 2);

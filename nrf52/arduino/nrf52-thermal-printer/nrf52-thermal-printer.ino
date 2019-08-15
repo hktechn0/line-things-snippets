@@ -39,6 +39,7 @@
 #define CMD_WAKE        0x04
 #define CMD_SLEEP       0x05
 #define CMD_FEED        0x06
+#define CMD_FEED_ROWS   0x07
 #define CMD_BITMAP_WRITE  0x10
 #define CMD_BITMAP_FLUSH  0x11
 #define CMD_TEXT_PRINT    0x20
@@ -183,6 +184,11 @@ void command_process_one() {
     case CMD_FEED:
       if (cmd->length >= 2) {
         printer.feed(cmd->data[1]);
+      }
+      break;
+    case CMD_FEED_ROWS:
+      if (cmd->length >= 2) {
+        printer.feedRows(cmd->data[1]);
       }
       break;
     case CMD_BITMAP_WRITE: {
