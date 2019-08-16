@@ -25,7 +25,7 @@
       </button>
       <button type="button" id="device-list-item"
         class="list-group-item list-group-item-action justify-content-between align-items-center d-none">
-        <span><i class="fas fa-microchip"></i></span>
+        <span><i class="fas fa-print"></i></span>
         <span>
           <strong class="device-name">Test Device</strong><br>
           <small class="device-id">daebb240-b041-11e4-9e45-0002a5d5c51b</small>
@@ -36,10 +36,13 @@
   </div>
 
   <div id="device-cards" class="">
-    <div id="device-template" class="my-2" style="display:none;">
+    <div id="device-template" class="my-2" style="adisplay:none;">
       <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between py-2">
-          <div class="device-name">N/A</div>
+          <div>
+            <i class="fas fa-print"></i>
+            <span class="device-name">N/A</span>
+          </div>
           <div>
             <a href="#" class="device-status btn btn-outline-warning btn-sm disabled">Connecting...</a>
             <a href="#" class="device-disconnect btn btn-danger btn-sm" style="display:none;">
@@ -47,12 +50,21 @@
             </a>
           </div>
         </div>
-        <div class="card-body container" style="display:none;">
+        <div class="card-body container" style="adisplay:none;">
+          <div class="row">
+            <div class="col"></div>
+          </div>
           <nav class="row">
             <div class="nav nav-tabs col" role="tablist">
-              <a class="nav-item nav-link small active" id="nav-line-tab" data-toggle="tab" href="#nav-line" role="tab" aria-controls="nav-line" aria-selected="true">LINE</a>
-              <a class="nav-item nav-link small" id="nav-text-tab" data-toggle="tab" href="#nav-text" role="tab" aria-controls="nav-text" aria-selected="false">Text & QR</a>
-              <a class="nav-item nav-link small" id="nav-image-tab" data-toggle="tab" href="#nav-image" role="tab" aria-controls="nav-image" aria-selected="false">Image</a>
+              <a class="nav-item nav-link small active" id="nav-line-tab" data-toggle="tab" href="#nav-line" role="tab" aria-controls="nav-line" aria-selected="true">
+                <i class="fab fa-line"></i> LINE
+              </a>
+              <a class="nav-item nav-link small" id="nav-text-tab" data-toggle="tab" href="#nav-text" role="tab" aria-controls="nav-text" aria-selected="false">
+                <i class="fas fa-font"></i> Text & QR
+              </a>
+              <a class="nav-item nav-link small" id="nav-image-tab" data-toggle="tab" href="#nav-image" role="tab" aria-controls="nav-image" aria-selected="false">
+                <i class="fas fa-image"></i> Image
+              </a>
             </div>
           </nav>
           <div class="tab-content row my-2">
@@ -89,7 +101,7 @@
               <div class="row text-center mt-3">
                 <div class="col">
                   <button class="display-line-refresh btn btn-primary">
-                    <i class="fas fa fa-print" aria-hidden="true"></i> Print
+                    <i class="fas fa fa-print"></i> Print
                   </button>
                 </div>
               </div>
@@ -142,7 +154,7 @@
               <div class="row text-center form-command-buttons">
                 <div class="col">
                   <button class="add-input btn btn-secondary">
-                    <i class="fas fa fa-plus" aria-hidden="true"></i> Text
+                    <i class="fas fa fa-plus"></i> Text
                   </button>
                 </div>
                 <div class="col">
@@ -152,7 +164,7 @@
                 </div>
                 <div class="col">
                   <button class="display-text-refresh btn btn-primary">
-                    <i class="fas fa fa-print" aria-hidden="true"></i> Print
+                    <i class="fas fa fa-print"></i> Print
                   </button>
                 </div>
               </div>
@@ -177,7 +189,7 @@
               <div class="row text-center mt-3">
                 <div class="col">
                   <button class="display-image-refresh btn btn-primary">
-                    <i class="fas fa fa-print" aria-hidden="true"></i> Print
+                    <i class="fas fa fa-print"></i> Print
                   </button>
                 </div>
               </div>
