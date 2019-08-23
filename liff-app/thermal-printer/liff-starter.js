@@ -168,7 +168,7 @@ function initializeCardForDevice(device) {
 
     template.style.display = 'block';
     template.setAttribute('id', cardId);
-    template.querySelector('.card > .card-header > .device-name').innerText = device.name;
+    template.querySelector('.device-card-name').innerText = device.name;
 
     // Device disconnect button
     template.querySelector('.device-disconnect').addEventListener('click', async () => {
