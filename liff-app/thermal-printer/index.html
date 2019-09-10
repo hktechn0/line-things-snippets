@@ -194,32 +194,80 @@
           </div>
           <div class="row my-3">
             <div class="col">
-              <button class="btn btn-sm btn-outline-dark" type="button" data-toggle="collapse" data-target="#advanced" aria-expanded="false" aria-controls="advanced">
+              <button id="menu-advanced-btn" class="btn btn-sm btn-outline-dark" type="button" data-toggle="collapse" data-target="#menu-advanced" aria-expanded="false" aria-controls="menu-advanced">
                 <i class="fas fa-cogs"></i> Advanced menu
               </button>
             </div>
           </div>
-          <div id="advanced" class="row collapse">
+          <div id="menu-advanced" class="row collapse">
             <div class="col">
               <nav>
                 <div class="nav nav-tabs nav-justified" id="nav-tab" role="tablist">
-                  <a class="nav-item nav-link small active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">
+                  <a class="nav-item nav-link small active" id="nav-settings-tab" data-toggle="tab" href="#nav-settings" role="tab" aria-controls="nav-settings" aria-selected="true">
                     <i class="fas fa-cog"></i> Settings
                   </a>
-                  <a class="nav-item nav-link small" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">
+                  <a class="nav-item nav-link small" id="nav-commands-tab" data-toggle="tab" href="#nav-commands" role="tab" aria-controls="nav-commands" aria-selected="false">
                     <i class="fas fa-tools"></i> Commands
                   </a>
-                  <a class="nav-item nav-link small" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false">
+                  <a class="nav-item nav-link small" id="nav-status-tab" data-toggle="tab" href="#nav-status" role="tab" aria-controls="nav-status" aria-selected="false">
                       <i class="fas fa-info-circle"></i> Status
                   </a>
                 </div>
               </nav>
               <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-                  
+                <div class="tab-pane fade show active" id="nav-settings" role="tabpanel" aria-labelledby="nav-settings-tab">
+                  <div class="input-group input-group-sm mb-1 mt-3">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Height</label>
+                    </div>
+                    <input type="number" name="height" class="value-paper-height form-control" value="30"
+                      placeholder="The height of print area.">
+                    <div class="input-group-append">
+                      <label class="input-group-text">mm</label>
+                    </div>
+                  </div>
+                  <div class="input-group input-group-sm mb-1">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Margin</label>
+                    </div>
+                    <input type="number" name="margin" class="value-paper-margin form-control" value="2"
+                      placeholder="The vertical margin of each.">
+                    <div class="input-group-append">
+                      <label class="input-group-text">mm</label>
+                    </div>
+                  </div>
+                  <div class="input-group input-group-sm mb-1">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Gap</label>
+                    </div>
+                    <input type="number" name="gap" class="value-paper-gap form-control" value="2"
+                      placeholder="The gap of each print area.">
+                    <div class="input-group-append">
+                      <label class="input-group-text">mm</label>
+                    </div>
+                  </div>
                 </div>
-                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">...</div>
-                <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">...</div>
+                <div class="tab-pane fade" id="nav-commands" role="tabpanel" aria-labelledby="nav-commands-tab">
+                  <div class="input-group input-group-sm mb-1">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Feed</label>
+                    </div>
+                    <input type="number" name="margin" class="value-cmd-feed form-control" value="1">
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary button-cmd-feed" type="button">Send</button>
+                    </div>
+                  </div>
+                  <div class="input-group input-group-sm mb-1">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Feed Row</label>
+                    </div>
+                    <input type="number" name="margin" class="value-cmd-feed-row form-control" value="1">
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary button-cmd-feed-row" type="button">Send</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="nav-status" role="tabpanel" aria-labelledby="nav-status-tab">...</div>
               </div>
             </div>
           </div>

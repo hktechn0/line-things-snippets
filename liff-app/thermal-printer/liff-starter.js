@@ -5,7 +5,8 @@ const PSDI_SERVICE_UUID = "E625601E-9E55-4597-A598-76018A0D293D";
 const PSDI_CHARACTERISTIC_UUID = "26E2B12B-85F0-4F3F-9FDD-91D114270E6E";
 
 const PAPER_WIDTH = 384;
-const PAPER_HEIGHT = 500;
+const DOTS_PER_MM = 8;
+//const PAPER_HEIGHT = 500;
 const BUFFER_HEIGHT = 100;
 
 const CMD_RESET       = 0x00;
@@ -240,8 +241,20 @@ function initializeCardForDevice(device) {
         };
     });
 
+    // Command buttons
+    template.querySelector('.button-cmd-feed').addEventListener("click", async event => {
+        const value = parseInt(template.querySelector('.value-cmd-feed').value);
+        await sendCommand(device, [CMD_FEED, value])
+            .catch(e => onScreenLog(`ERROR on sendCommand(): ${e}\n${e.stack}`));
+    });
+    template.querySelector('.button-cmd-feed-row').addEventListener("click", async event => {
+        const value = parseInt(template.querySelector('.value-cmd-feed-row').value);
+        await sendCommand(device, [CMD_FEED_ROWS, value])
+            .catch(e => onScreenLog(`ERROR on sendCommand(): ${e}\n${e.stack}`));
+    });
+
     // Tabs
-    ['line', 'text', 'image'].map(key => {
+    ['line', 'text', 'image', 'settings', 'commands', 'status'].map(key => {
         const tab = template.querySelector(`#nav-${key}-tab`);
         const nav = template.querySelector(`#nav-${key}`);
 
@@ -249,9 +262,19 @@ function initializeCardForDevice(device) {
         nav.id = `nav-${key}-${device.id}`;
 
         tab.href = '#' + nav.id;
-        tab['aria-controls'] = nav.id;
-        nav['aria-labelledby'] = tab.id;
-    })
+        tab.setAttribute('aria-controls', nav.id);
+        nav.setAttribute('aria-labelledby', tab.id);
+    });
+    ['advanced'].map(key => {
+        const btn = template.querySelector(`#menu-${key}-btn`);
+        const menu = template.querySelector(`#menu-${key}`);
+
+        btn.id = `menu-${key}-btn-${device.id}`;
+        menu.id = `menu-${key}-${device.id}`;
+
+        btn.setAttribute('aria-controls', menu.id);
+        btn.setAttribute('data-target', `#${menu.id}`);
+    });
 
     // Remove existing same id card
     const oldCardElement = getDeviceCard(device);
@@ -357,11 +380,11 @@ async function renderProfileToCanvas(device) {
 
     updateDeviceProgress(device, 'upload-profile-progress', 0);
     canvas.width = PAPER_WIDTH;
-    canvas.height = PAPER_HEIGHT;
+    canvas.height = getPrintAreaHeight(device);
 
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, PAPER_WIDTH, PAPER_HEIGHT);
+    ctx.fillRect(0, 0, PAPER_WIDTH, canvas.height);
 
     let imageWidth;
     switch (getProfileCommandForm(device).querySelector('.value-profile-image-size').value) {
@@ -401,7 +424,7 @@ async function renderProfileToCanvas(device) {
     ctx.fillText(profile.statusMessage || "", PAPER_WIDTH / 2, offsetY + 50, PAPER_WIDTH);
 
     // threshold for text
-    const image = ctx.getImageData(0, 0, PAPER_WIDTH, PAPER_HEIGHT);
+    const image = ctx.getImageData(0, 0, PAPER_WIDTH, canvas.height);
     const dithered = new CanvasDither().threshold(image, 190);
     ctx.putImageData(dithered, 0, 0);
 }
@@ -420,24 +443,24 @@ function renderImageToCanvas(device, dataUrl) {
         }
 
         canvas.width = PAPER_WIDTH;
-        canvas.height = PAPER_HEIGHT;
+        canvas.height = getPrintAreaHeight(device);
 
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, PAPER_WIDTH, PAPER_HEIGHT);
+        ctx.fillRect(0, 0, PAPER_WIDTH, canvas.height);
 
         const ratioWidth = PAPER_WIDTH / image.width;
-        const ratioHeight = PAPER_HEIGHT / image.height;
+        const ratioHeight = canvas.height / image.height;
 
         if (ratioHeight > ratioWidth) {
             const height = Math.floor(image.height * ratioWidth);
-            //const y = Math.floor((PAPER_HEIGHT - height) / 2);
+            //const y = Math.floor((canvas.height - height) / 2);
             canvas.height = height;
             drawImage(canvas, image, 0, 0, PAPER_WIDTH, height);
         } else {
             const width = Math.floor(image.width * ratioHeight);
             //const x = Math.floor((DISPLAY_CANVAS_WIDTH - width) / 2);
-            drawImage(canvas, image, 0, 0, width, PAPER_HEIGHT);
+            drawImage(canvas, image, 0, 0, width, canvas.height);
         }
     };
     image.src = dataUrl;
@@ -493,7 +516,8 @@ async function refreshImageDisplay(device, canvas, progressBarClass=null) {
 
     await sendImageData(device, canvas, progressBarClass);
 
-    await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
+    //await writeCharacteristic(commandCharacteristic, [CMD_FEED, 3]);
+    await writeCharacteristic(commandCharacteristic, [CMD_FEED_ROWS, getPrintAreaGap(device)]);
     await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
 }
 
@@ -613,6 +637,37 @@ async function sendImageData(device, canvas, progressBarClass=null) {
     }
 }
 
+async function sendCommand(device, command) {
+    if (!connectedUUIDSet.has(device.id)) {
+        window.alert('Please connect to a device first');
+        onScreenLog('Please connect to a device first.');
+        return;
+    }
+
+    const commandCharacteristic = await getCharacteristic(
+        device, THERMAL_PRINTER_SERVICE_UUID, COMMAND_CHARACTERISTIC);
+
+    await writeCharacteristic(commandCharacteristic, [CMD_WAKE]);
+    await writeCharacteristic(commandCharacteristic, command);
+    await writeCharacteristic(commandCharacteristic, [CMD_SLEEP]);
+}
+
+function getPrintAreaHeight(device) {
+    const menu = getAdvancedMenu(device);
+    const height = parseInt(menu.querySelector('.value-paper-height').value);
+    const margin = parseInt(menu.querySelector('.value-paper-margin').value);
+    onScreenLog(`height: ${height} ${margin} ${height - (margin * 2)}`);
+    return (height - (margin * 2)) * DOTS_PER_MM;
+}
+
+function getPrintAreaGap(device) {
+    const menu = getAdvancedMenu(device);
+    const margin = parseInt(menu.querySelector('.value-paper-margin').value);
+    const gap = parseInt(menu.querySelector('.value-paper-gap').value);
+    onScreenLog(`gap: ${margin} ${gap} ${(margin * 2) + gap}`);
+    return ((margin * 2) + gap) * DOTS_PER_MM;
+}
+
 async function readCharacteristic(characteristic) {
     const response = await characteristic.readValue().catch(e => {
         flashSDKError(e);
@@ -670,6 +725,10 @@ function getProfileCommandForm(device) {
 
 function getCommandForms(device) {
     return getDeviceCard(device).getElementsByClassName('form-command');
+}
+
+function getAdvancedMenu(device) {
+    return document.getElementById(`menu-advanced-${device.id}`);
 }
 
 function getImageCanvas(device) {
