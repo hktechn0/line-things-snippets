@@ -4,14 +4,14 @@
 #include <BLE2902.h>
 #include <FS.h>
 #include <SPIFFS.h>
-#include <HD_0158_RG0019.h>
+#include <HD_0158_RG0019A.h>
 
 /**
  * Example for HD-0158-RG0019A 32x16 dot matrix LED panel with ESP32-DevKitC
- * https://github.com/techno/arduino-HD-0158-RG0019
+ * https://github.com/techno/arduino-HD-0158-RG0019A
  */
 
-// HD-0158-RG0019 library doesn't use manual RAM control.
+// HD-0158-RG0019A library doesn't use manual RAM control.
 // Set SE and ABB low.
 #define PANEL_PIN_A3  16
 #define PANEL_PIN_A2  17
@@ -80,7 +80,7 @@ volatile int32_t pos = INT32_MIN;
 volatile bool saveToFile = false;
 unsigned long lastUpdated;
 
-HD_0158_RG0019 matrix(
+HD_0158_RG0019A matrix(
   N_PANEL,
   PANEL_PIN_A3, PANEL_PIN_A2, PANEL_PIN_A1, PANEL_PIN_A0,
   PANEL_PIN_DG, PANEL_PIN_CLK, PANEL_PIN_WE, PANEL_PIN_DR, PANEL_PIN_ALE);
