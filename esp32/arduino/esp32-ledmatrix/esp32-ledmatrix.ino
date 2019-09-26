@@ -42,7 +42,7 @@
 #define DEVICE_NAME "LED Matrix - ESP32"
 
 // User service UUID: Change this to your generated service UUID
-#define USER_SERVICE_UUID "2ab1cc76-5ca4-4bca-85fe-8262102de7f3"
+// #define USER_SERVICE_UUID "2ab1cc76-5ca4-4bca-85fe-8262102de7f3"
 
 // Display service and characteristics
 #define DISPLAY_SERVICE_UUID "777AD5D4-7355-4682-BF3E-72FE7C70B3CE"
