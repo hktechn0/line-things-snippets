@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css?id=20190529_1559123314">
+  <title>Display Service</title>
+</head>
+
+<body>
+  <div id="alert-liffble-notavailable" class="container-fluid my-2" style="display:none;">
+    <div class="alert alert-danger lead py-5" role="alert">
+      <i class="fas fa-exclamation-triangle"></i> BLE feature is not available.
+    </div>
+  </div>
+
+  <div class="mb-2">
+    <div id="device-list" class="list-group">
+      <button type="button" class="list-group-item disabled font-weight-bold">
+        <i class='fas fa-tshirt fa-spin mr-2'></i> Finding T-Shift
+      </button>
+      <button type="button" id="device-list-item"
+        class="list-group-item list-group-item-action justify-content-between align-items-center d-none">
+        <span><i class="fas fa-tshirt"></i></span>
+        <span>
+          <strong class="device-name">Test Device</strong><br>
+          <small class="device-id">DEVICE_ID</small>
+        </span>
+        <span class="badge badge-primary badge-pill"><i class="fas fa-signal"></i> <span class="rssi"></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="device-cards" class="">
+    <div id="device-template" class="my-2" style="display:none;">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between py-2">
+          <div class="device-name">N/A</div>
+          <div>
+            <a href="#" class="device-status btn btn-outline-warning btn-sm disabled">Connecting...</a>
+            <a href="#" class="device-disconnect btn btn-danger btn-sm" style="display:none;">
+              <i class="fas fa-sign-out-alt"></i>
+            </a>
+          </div>
+        </div>
+        <div class="card-body container" style="display:none;">
+          <div class="row justify-content-center align-items-center input-text-row">
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control input-display-text" placeholder="Enter text">
+                <div class="input-group-append">
+                  <select class="custom-select input-display-color">
+                    <optgroup label="Solid">
+                      <option value="G">Green</option>
+                      <option value="R">Red</option>
+                      <option value="B">Blue</option>
+                      <option value="C">Cyan</option>
+                      <option value="M">Magenta</option>
+                      <option value="O">Yellow</option>
+                      <option value="A">White</option>
+                    </optgroup>
+                    <optgroup label="🌈 Rainbow">
+                      <option value="D">Rainbow</option>
+                    </optgroup>
+                    <optgroup label="💥 Single color blink">
+                      <option value="Y">Red</option>
+                      <option value="X">Green</option>
+                      <option value="P">Blue</option>
+                      <option value="Q">Cyan</option>
+                      <option value="S">Magenta</option>
+                      <option value="Z">Yellow</option>
+                      <option value="T">White</option>
+                    </optgroup>
+                    <optgroup label="💥💥 Multi color blink">
+                      <option value="U">Red-Green</option>
+                      <option value="N">Red-Blue</option>
+                      <option value="L">Green-Blue</option>
+                      <option value="V">Green-Yellow</option>
+                      <option value="W">Red-Yellow</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row justify-content-center align-items-center mt-2">
+            <div class="col text-center">
+              <small id="textHelp" class="form-text text-muted">Only supported ASCII characters.</small>
+            </div>
+          </div>
+
+          <div class="row justify-content-center m-3">
+            <div class="col text-center">
+              <button type="button" class="button-add-text btn btn-secondary"><i class="fas fa-plus-square"></i> Add Text</button>
+            </div>
+          </div>
+
+          <div class="row justify-content-center align-items-center mb-1">
+            <div class="col">
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-adjust"></i></span>
+                </div>
+                <input type="number" class="form-control input-display-brightness" value="64">
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-rainbow"></i></span>
+                </div>
+                <input type="number" class="form-control input-display-rainbow" value="64">
+              </div>
+            </div>
+          </div>
+          <div class="row justify-content-center align-items-center">
+            <div class="col">
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-angle-double-left"></i></span>
+                </div>
+                <input type="number" class="form-control input-display-scroll" value="100">
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-haykal"></i></span>
+                </div>
+                <input type="number" class="form-control input-display-blink" value="100">
+              </div>
+            </div>
+          </div>
+
+          <div class="row justify-content-center mt-3">
+            <div class="col text-center">
+              <button type="button" class="button-send btn btn-primary"><i class="fas fa-sync"></i> Refresh</button>
+            </div>
+            <div class="col text-center">
+              <button type="button" class="button-pause btn btn-danger"><i class="fas fa-pause"></i> Pause</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="log-panel" class="collapse my-2">
+    <textarea id="logbox" rows="24" class="card-body form-control input-sm text-monospace p-2" readonly></textarea>
+  </div>
+
+  <footer class="footer">
+    <div class="container-fluid my-2">
+      <div class="row align-middle">
+        <button id="sdkversionfield" class="btn btn-sm btn-light col col-6"></button>
+        <button class="btn btn-sm btn-secondary col col-2" type="button" data-toggle="collapse" data-target="#log-panel" aria-expanded="false" aria-controls="log-panel">
+          Log
+        </button>
+        <div class="col col-4"></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vConsole/3.2.0/vconsole.min.js"></script>
+  <script>
+    var vConsole = new VConsole();
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em" crossorigin="anonymous"></script>
+  <script src="https://d.line-scdn.net/liff/1.0/sdk.js"></script>
+  <script src="liff-starter.js?id=20190529_1559123314"></script>
+</body>
+
+</html>
